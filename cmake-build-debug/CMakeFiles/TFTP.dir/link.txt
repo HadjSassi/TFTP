@@ -1,0 +1,1 @@
+/usr/bin/cc -g CMakeFiles/TFTP.dir/main.c.o CMakeFiles/TFTP.dir/gettftp.c.o CMakeFiles/TFTP.dir/puttftp.c.o -o TFTP 

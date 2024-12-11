@@ -1,0 +1,5 @@
+/mnt/c/Users/mahdi/Desktop/ENSEA/2024-2025/TpSynthese/TFTP/cmake-build-debug/CMakeFiles/TFTP1.dir
+/mnt/c/Users/mahdi/Desktop/ENSEA/2024-2025/TpSynthese/TFTP/cmake-build-debug/CMakeFiles/TFTP2.dir
+/mnt/c/Users/mahdi/Desktop/ENSEA/2024-2025/TpSynthese/TFTP/cmake-build-debug/CMakeFiles/TFTP3.dir
+/mnt/c/Users/mahdi/Desktop/ENSEA/2024-2025/TpSynthese/TFTP/cmake-build-debug/CMakeFiles/edit_cache.dir
+/mnt/c/Users/mahdi/Desktop/ENSEA/2024-2025/TpSynthese/TFTP/cmake-build-debug/CMakeFiles/rebuild_cache.dir
