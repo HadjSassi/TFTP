@@ -1,4 +1,7 @@
 # TFTP TP2 By ELLOUMI Molka and HADJ SASSI Mahdi
+### 5. For puttftp:
+Still don't have the desired behaviour, but the logic is clear. 
+
 
 ### 4. For gettftp:
 Difficulties: Wireshark is not functional in our case, maybe because
