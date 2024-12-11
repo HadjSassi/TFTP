@@ -3,6 +3,11 @@ project(TFTP C)
 
 set(CMAKE_C_STANDARD 11)
 
-add_executable(TFTP1 main.c)
-add_executable(TFTP2 gettftp.c)
-add_executable(TFTP3 puttftp.c)
+include_directories(inc)
+
+add_executable(TFTP1 main.c
+        utils.c)
+add_executable(TFTP2 gettftp.c
+        utils.c)
+add_executable(TFTP3 puttftp.c
+        utils.c)

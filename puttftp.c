@@ -1,15 +1,19 @@
-//
-// Created by mahdi on 11/12/2024.
-//
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <netdb.h>
+#include "utils.h"
 
-void main(int argc, char **argv) {
-    if(argc != 3) {
-        printf("Missing arguments! \n");
-        exit(0);
-    }
-    printf("Host: %s\t",argv[1]);
-    printf("File: %s\n",argv[2]);
+
+int main(int argc, char **argv) {
+    validate_arguments(argc);
+
+    const char *host = argv[1];
+    const char *file = argv[2];
+
+    struct addrinfo *res = resolve_host(host);
+    print_resolved_ip(res);
+
+    freeaddrinfo(res);
+    printf("File to process: %s\n", file);
+    return 0;
 }
+

@@ -227,6 +227,36 @@ puttftp.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP3.dir/build.make CMakeFiles/TFTP3.dir/puttftp.c.s
 .PHONY : puttftp.c.s
 
+utils.o: utils.c.o
+.PHONY : utils.o
+
+# target to build an object file
+utils.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP1.dir/build.make CMakeFiles/TFTP1.dir/utils.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP2.dir/build.make CMakeFiles/TFTP2.dir/utils.c.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP3.dir/build.make CMakeFiles/TFTP3.dir/utils.c.o
+.PHONY : utils.c.o
+
+utils.i: utils.c.i
+.PHONY : utils.i
+
+# target to preprocess a source file
+utils.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP1.dir/build.make CMakeFiles/TFTP1.dir/utils.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP2.dir/build.make CMakeFiles/TFTP2.dir/utils.c.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP3.dir/build.make CMakeFiles/TFTP3.dir/utils.c.i
+.PHONY : utils.c.i
+
+utils.s: utils.c.s
+.PHONY : utils.s
+
+# target to generate assembly for a file
+utils.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP1.dir/build.make CMakeFiles/TFTP1.dir/utils.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP2.dir/build.make CMakeFiles/TFTP2.dir/utils.c.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/TFTP3.dir/build.make CMakeFiles/TFTP3.dir/utils.c.s
+.PHONY : utils.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -247,6 +277,9 @@ help:
 	@echo "... puttftp.o"
 	@echo "... puttftp.i"
 	@echo "... puttftp.s"
+	@echo "... utils.o"
+	@echo "... utils.i"
+	@echo "... utils.s"
 .PHONY : help
 
 
