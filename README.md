@@ -2,6 +2,11 @@
 
 
 
+
+### 3. Reserve a connection socket to the server.
+We've defined a socket initialization in the utils.c and we've called in the ``puttftp.c`` and ``getftp.c``
+
+
 ### 2. Call getaddrinfo to obtain the server’s address.
 To follow the clean code we've split our code into multiple functions
 and we have shown the IPv4 address in both gettftp and puttftp.

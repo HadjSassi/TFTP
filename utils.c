@@ -17,7 +17,7 @@ void validate_arguments(int argc) {
 }
 
 
-struct addrinfo* resolve_host(const char *host) {
+struct addrinfo *resolve_host(const char *host) {
     struct addrinfo hints, *res;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
@@ -35,7 +35,7 @@ struct addrinfo* resolve_host(const char *host) {
 
 void print_resolved_ip(struct addrinfo *res) {
     char ipstr[INET_ADDRSTRLEN];
-    struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+    struct sockaddr_in *ipv4 = (struct sockaddr_in *) res->ai_addr;
 
     if (inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr)) == NULL) {
         perror("inet_ntop error");
@@ -43,4 +43,15 @@ void print_resolved_ip(struct addrinfo *res) {
     }
 
     printf("Resolved IP: %s\n", ipstr);
+}
+
+
+int socket_init(struct addrinfo *res) {
+    int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+    if (sockfd < 0) {
+        perror("socket error");
+        freeaddrinfo(res);
+        return -1;
+    }
+    return sockfd;
 }

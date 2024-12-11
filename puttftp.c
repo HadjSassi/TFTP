@@ -10,10 +10,12 @@ int main(int argc, char **argv) {
     const char *file = argv[2];
 
     struct addrinfo *res = resolve_host(host);
-    print_resolved_ip(res);
+    // print_resolved_ip(res);
+
+    int sockfd = socket_init(res);
 
     freeaddrinfo(res);
-    printf("File to process: %s\n", file);
+    // printf("File to process: %s\n", file);
     return 0;
 }
 
