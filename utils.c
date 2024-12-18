@@ -10,7 +10,7 @@
 
 void validate_arguments(int argc) {
     if (argc != 3) {
-        fprintf(stderr, "Usage: ./program <host> <file>\n");
+        fprintf(stderr, WRONG_PARAMETER_ERROR);
         exit(EXIT_FAILURE);
     }
 }
@@ -23,10 +23,8 @@ struct addrinfo *resolve_host(const char *host) {
 
     int status = getaddrinfo(host, PORT, &hints, &res);
     if (status != 0) {
-        fprintf(stderr, "getaddrinfo error: %s\n", gai_strerror(status));
         exit(EXIT_FAILURE);
     }
-
     return res;
 }
 
@@ -35,11 +33,10 @@ void print_resolved_ip(struct addrinfo *res) {
     struct sockaddr_in *ipv4 = (struct sockaddr_in *) res->ai_addr;
 
     if (inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr)) == NULL) {
-        perror("inet_ntop error");
         exit(EXIT_FAILURE);
     }
 
-    printf("Resolved IP: %s\n", ipstr);
+    printf(RESOLVED_IP, ipstr);
 }
 
 void send_rrq(int sockfd, struct sockaddr *server_addr, socklen_t addr_len, const char *file) {
@@ -57,18 +54,13 @@ void send_rrq(int sockfd, struct sockaddr *server_addr, socklen_t addr_len, cons
 
     ssize_t sent = sendto(sockfd, buffer, offset, 0, server_addr, addr_len);
     if (sent < 0) {
-        perror("sendto error");
         exit(EXIT_FAILURE);
     }
-    /*printf("Sending RRQ to %s:%d\n",
-           inet_ntoa(((struct sockaddr_in *) server_addr)->sin_addr),
-           ntohs(((struct sockaddr_in *) server_addr)->sin_port));*/
 }
 
 int socket_init(struct addrinfo *res) {
     int sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     if (sockfd < 0) {
-        perror("socket error");
         freeaddrinfo(res);
         return -1;
     }
@@ -79,17 +71,15 @@ void receive_single_data(int sockfd, struct sockaddr *server_addr, socklen_t add
     char buffer[BUFFER_SIZE];
     ssize_t received = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, server_addr, &addr_len);
     if (received < 0) {
-        perror("recvfrom error");
         exit(EXIT_FAILURE);
     }
 
     if (buffer[1] != 3) {
-        fprintf(stderr, "Unexpected packet received\n");
         exit(EXIT_FAILURE);
     }
 
     uint16_t block_number = ntohs(*(uint16_t *) &buffer[2]);
-    printf("Received block %d, data: ", block_number);
+    printf(SUCCESS_RCV, block_number);
 
     for (int i = 4; i < 16 && i < received; i++) {
         printf("%02x ", (unsigned char) buffer[i]);
@@ -101,15 +91,13 @@ void receive_single_data(int sockfd, struct sockaddr *server_addr, socklen_t add
     ack[1] = 4;
     *(uint16_t *) &ack[2] = htons(block_number);
     if (sendto(sockfd, ack, sizeof(ack), 0, server_addr, addr_len) < 0) {
-        perror("sendto error");
         exit(EXIT_FAILURE);
     }
 }
 
 void receive_multiple_data(int sockfd, struct sockaddr *server_addr, socklen_t addr_len, const char *file) {
-    FILE *output = fopen(file, "wb");
+    FILE *output = fopen(file, WRITE_BINARY);
     if (!output) {
-        perror("fopen error");
         exit(EXIT_FAILURE);
     }
 
@@ -119,33 +107,29 @@ void receive_multiple_data(int sockfd, struct sockaddr *server_addr, socklen_t a
     while (1) {
         ssize_t received = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, server_addr, &addr_len);
         if (received < 0) {
-            perror("recvfrom error");
             exit(EXIT_FAILURE);
         }
 
-        printf("Received packet of size %zd\n", received);
+        printf(SUCCESS_RCV_PACKET, received);
 
-        printf("Packet contents: ");
         for (int i = 0; i < received; i++) {
             printf("%02X ", (unsigned char) buffer[i]);
         }
         printf("\n");
 
         if (buffer[1] != 3) {
-            fprintf(stderr, "Unexpected packet received\n");
             exit(EXIT_FAILURE);
         }
 
         uint16_t block_number = ntohs(*(uint16_t *) &buffer[2]);
 
-        printf("Expected block: %d, Received block: %d\n", expected_block, block_number);
+        printf(RCV_MSG_OVERVIEW, expected_block, block_number);
 
         if (block_number != expected_block) {
-            fprintf(stderr, "Unexpected block number\n");
             exit(EXIT_FAILURE);
         }
 
-        printf("Data received (up to %zd bytes): %.*s\n", received - 4, (int) (received - 4), &buffer[4]);
+        printf(RCV_OVERVIEW, received - 4, (int) (received - 4), &buffer[4]);
 
         fwrite(&buffer[4], 1, received - 4, output);
 
@@ -154,7 +138,6 @@ void receive_multiple_data(int sockfd, struct sockaddr *server_addr, socklen_t a
         ack[1] = 4;
         *(uint16_t *) &ack[2] = htons(block_number);
         if (sendto(sockfd, ack, sizeof(ack), 0, server_addr, addr_len) < 0) {
-            perror("sendto error");
             exit(EXIT_FAILURE);
         }
 
@@ -170,103 +153,99 @@ void receive_multiple_data(int sockfd, struct sockaddr *server_addr, socklen_t a
 
 void send_wrq(int sockfd, struct sockaddr_in *server_addr, const char *filename) {
     char buffer[BUFFER_SIZE];
-    int filename_len = strlen(filename);
-    int mode_len = 6;
+    int offset = 0;
 
-    buffer[0] = 0;
-    buffer[1] = TFTP_OP_WRQ;
+    buffer[offset++] = 0;
+    buffer[offset++] = TFTP_OP_WRQ;
 
-    memcpy(&buffer[2], filename, filename_len + 1);
+    strcpy(&buffer[offset], filename);
+    offset += strlen(filename) + 1;
 
-    memcpy(&buffer[2 + filename_len + 1], "octet", mode_len);
+    strcpy(&buffer[offset], MODE);
+    offset += strlen(MODE) + 1;
 
-    ssize_t sent = sendto(sockfd, buffer, 2 + filename_len + 1 + mode_len, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
+    ssize_t sent = sendto(sockfd, buffer, offset, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
     if (sent < 0) {
-        perror("sendto error in WRQ");
         exit(EXIT_FAILURE);
     }
-    printf("Sent WRQ to server for file: %s\n", filename);
+
+    printf(SUCCESS_WRQ, filename);
 }
 
 void send_single_data_packet(int sockfd, struct sockaddr_in *server_addr, const char *file) {
-    FILE *fp = fopen(file, "rb");
-    if (!fp) {
-        perror("File open error");
+    char buffer[BUFFER_SIZE];
+    FILE *input = fopen(file, READ_BINARY);
+    if (!input) {
         exit(EXIT_FAILURE);
     }
 
-    char buffer[BUFFER_SIZE];
-    size_t bytes_read = fread(buffer + 4, 1, BUFFER_SIZE - 4, fp);
-    if (bytes_read < 0) {
-        perror("Error reading file");
-        exit(EXIT_FAILURE);
-    }
+    size_t data_len = fread(&buffer[4], 1, BUFFER_SIZE - 4, input);
+    fclose(input);
+
     buffer[0] = 0;
     buffer[1] = TFTP_OP_DATA;
-    uint16_t block_number = 1;
-    *(uint16_t *)(buffer + 2) = htons(block_number);
+    buffer[2] = 0;
+    buffer[3] = 1;
 
-    ssize_t sent = sendto(sockfd, buffer, bytes_read + 4, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
+    ssize_t sent = sendto(sockfd, buffer, data_len + 4, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
     if (sent < 0) {
-        perror("sendto error in data packet");
         exit(EXIT_FAILURE);
     }
 
-    printf("Sent single data packet with block number 1\n");
-
-    fclose(fp);
+    printf(SUCCESS_ACK_1);
 }
 
 void send_multiple_data_packets(int sockfd, struct sockaddr_in *server_addr, const char *file) {
-    FILE *fp = fopen(file, "rb");
-    if (!fp) {
-        perror("File open error");
+    char buffer[BUFFER_SIZE];
+    FILE *input = fopen(file, READ_BINARY);
+    if (!input) {
         exit(EXIT_FAILURE);
     }
 
-    char buffer[BUFFER_SIZE];
     uint16_t block_number = 1;
+    ssize_t data_len;
+    socklen_t addr_len = sizeof(*server_addr);
 
-    while (1) {
-        size_t bytes_read = fread(buffer + 4, 1, BUFFER_SIZE - 4, fp);
-        if (bytes_read < 0) {
-            perror("Error reading file");
-            exit(EXIT_FAILURE);
-        }
-
+    while ((data_len = fread(&buffer[4], 1, BUFFER_SIZE - 4, input)) > 0) {
+        // Prepare DATA packet
         buffer[0] = 0;
         buffer[1] = TFTP_OP_DATA;
-        *(uint16_t *)(buffer + 2) = htons(block_number);
+        buffer[2] = (block_number >> 8) & 0xFF;
+        buffer[3] = block_number & 0xFF;
 
-        ssize_t sent = sendto(sockfd, buffer, bytes_read + 4, 0, (struct sockaddr *)server_addr, sizeof(*server_addr));
+        // Send the DATA packet
+        ssize_t sent = sendto(sockfd, buffer, data_len + 4, 0, (struct sockaddr *)server_addr, addr_len);
         if (sent < 0) {
-            perror("sendto error in data packet");
             exit(EXIT_FAILURE);
         }
 
-        printf("Sent data packet with block number %d\n", block_number);
+        printf("Data packet %d sent\n", block_number);
 
         char ack[4];
-        ssize_t ack_received = recvfrom(sockfd, ack, sizeof(ack), 0, NULL, NULL);
-        if (ack_received < 0) {
-            perror("recvfrom error in ACK");
+        ssize_t received = recvfrom(sockfd, ack, sizeof(ack), 0, (struct sockaddr *)server_addr, &addr_len);
+        if (received < 0) {
             exit(EXIT_FAILURE);
         }
 
-        uint16_t ack_block_number = ntohs(*(uint16_t *)(ack + 2));
+        if (ack[1] != 4) {
+            exit(EXIT_FAILURE);
+        }
+
+        uint16_t ack_block_number = ntohs(*(uint16_t *) &ack[2]);
         if (ack_block_number != block_number) {
-            fprintf(stderr, "Unexpected ACK block number. Expected %d, got %d\n", block_number, ack_block_number);
             exit(EXIT_FAILURE);
         }
 
-        printf("Received ACK for block number %d\n", block_number);
+        printf(SUCCESS_ACK, block_number);
 
-        if (bytes_read < BUFFER_SIZE - 4) {
+        if (data_len < BUFFER_SIZE - 4) {
             break;
         }
 
         block_number++;
     }
 
-    fclose(fp);
+    fclose(input);
+    printf(FINALIZATION_MSG);
 }
+
