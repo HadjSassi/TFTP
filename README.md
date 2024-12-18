@@ -1,7 +1,26 @@
 # TFTP TP2 By ELLOUMI Molka and HADJ SASSI Mahdi
 ### 5. For puttftp:
-Still don't have the desired behaviour, but the logic is clear. 
+Thanks to our teacher, that debugged with us the problem we got which is the
+order of the calls. 
+Now our puttftp is working with the desired way.
+We've made a file named test.txt that has a content ``Hello Word``.
+After launching the program the file is well transferred to the server.
 
+![img.png](img/q5.png)
+
+And for our wireshark : 
+```
+root@MahdiHadjSassi:~# tcpdump -i lo -v --print
+tcpdump: listening on lo, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+16:31:40.831074 IP (tos 0x0, ttl 64, id 58487, offset 0, flags [DF], proto UDP (17), length 48)
+    localhost.43419 > localhost.1069: UDP, length 20
+16:31:40.834871 IP (tos 0x0, ttl 64, id 58488, offset 0, flags [none], proto UDP (17), length 32)
+    localhost.55149 > localhost.43419: UDP, length 4
+16:31:40.838131 IP (tos 0x0, ttl 64, id 58489, offset 0, flags [DF], proto UDP (17), length 43)
+    localhost.43419 > localhost.55149: UDP, length 15
+16:31:40.839895 IP (tos 0x0, ttl 64, id 58490, offset 0, flags [none], proto UDP (17), length 32)
+    localhost.55149 > localhost.43419: UDP, length 4
+```
 
 ### 4. For gettftp:
 Difficulties: Wireshark is not functional in our case, maybe because

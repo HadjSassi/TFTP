@@ -170,6 +170,20 @@ void send_wrq(int sockfd, struct sockaddr_in *server_addr, const char *filename)
     }
 
     printf(SUCCESS_WRQ, filename);
+
+    char ack[4];
+    socklen_t addr_len = sizeof(*server_addr);
+    ssize_t received = recvfrom(sockfd, ack, sizeof(ack), 0, (struct sockaddr *)server_addr, &addr_len);
+    if (received < 0) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (ack[1] != 4 || ntohs(*(uint16_t *) &ack[2]) != 0) {
+        fprintf(stderr, "Error: Expected ACK block 0, got block %d\n", ntohs(*(uint16_t *) &ack[2]));
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Received ACK for block 0\n");
 }
 
 void send_single_data_packet(int sockfd, struct sockaddr_in *server_addr, const char *file) {
@@ -206,14 +220,13 @@ void send_multiple_data_packets(int sockfd, struct sockaddr_in *server_addr, con
     ssize_t data_len;
     socklen_t addr_len = sizeof(*server_addr);
 
+
     while ((data_len = fread(&buffer[4], 1, BUFFER_SIZE - 4, input)) > 0) {
-        // Prepare DATA packet
         buffer[0] = 0;
         buffer[1] = TFTP_OP_DATA;
         buffer[2] = (block_number >> 8) & 0xFF;
         buffer[3] = block_number & 0xFF;
 
-        // Send the DATA packet
         ssize_t sent = sendto(sockfd, buffer, data_len + 4, 0, (struct sockaddr *)server_addr, addr_len);
         if (sent < 0) {
             exit(EXIT_FAILURE);
@@ -248,4 +261,3 @@ void send_multiple_data_packets(int sockfd, struct sockaddr_in *server_addr, con
     fclose(input);
     printf(FINALIZATION_MSG);
 }
-
